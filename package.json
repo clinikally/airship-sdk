@@ -1,7 +1,7 @@
 {
-  "name": "react-native-stallion",
-  "version": "2.2.0",
-  "description": "Offical React Native SDK for Stallion",
+  "name": "@clinikally/airship-sdk",
+  "version": "1.0.0",
+  "description": "Self-hosted OTA updates SDK for React Native",
   "main": "index",
   "types": "types/index.d.ts",
   "react-native": "src/index",
@@ -43,11 +43,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/stallion-tech/react-native-stallion.git"
+    "url": "https://github.com/clinikally/airship-sdk.git"
   },
-  "author": "Sherlock <sherlock@redhorse.tech> (https://github.com/sherlock-redhorse)",
+  "author": "Clinikally Development Team",
   "license": "MIT",
-  "homepage": "https://stalliontech.io/",
+  "homepage": "https://clinikally.com/",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.2.2",
