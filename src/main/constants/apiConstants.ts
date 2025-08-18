@@ -1,4 +1,17 @@
-export const API_BASE_URL = 'https://your-ota-server.com';
+// @ts-ignore - React Native environment variable access
+const getApiBaseUrl = () => {
+  try {
+    // Try to access environment variable (works in React Native with proper setup)
+    if (typeof process !== 'undefined' && process.env?.AIRSHIP_API_BASE_URL) {
+      return process.env.AIRSHIP_API_BASE_URL;
+    }
+  } catch (error) {
+    // Fallback if process is not available
+  }
+  return 'http://localhost:8000';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export enum API_PATHS {
   LOGIN = '/api/v1/sdk/auth/verify-pin',

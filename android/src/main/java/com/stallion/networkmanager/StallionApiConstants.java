@@ -23,6 +23,7 @@ public class StallionApiConstants {
   public static final String STALLION_DEVICE_ID_KEY = "uid";
 
 
-  public static final String STALLION_API_BASE = "https://your-ota-server.com";
+  public static final String STALLION_API_BASE = System.getenv("AIRSHIP_API_BASE_URL") != null ? 
+    System.getenv("AIRSHIP_API_BASE_URL") : "http://localhost:8000";
   public static final String STALLION_INFO_API_PATH = "/api/v1/promoted/get-update-meta";
 }
