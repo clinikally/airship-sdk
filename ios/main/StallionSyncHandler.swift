@@ -186,23 +186,24 @@ class StallionSyncHandler {
             return 
         }
         
-        let newReleaseUrl = url
-        let newReleaseHash = hash
+        // Use the validated values
+        let finalUrl = url
+        let finalHash = hash
         
-        print("✅ Found valid release data - URL: \(newReleaseUrl)")
-        print("✅ Release hash: \(newReleaseHash)")
+        print("✅ Found valid release data - URL: \(finalUrl)")
+        print("✅ Release hash: \(finalHash)")
 
         let stateManager = StallionStateManager.sharedInstance()
         let lastRolledBackHash = stateManager?.stallionMeta?.lastRolledBackHash ?? ""
 
-        if newReleaseHash != lastRolledBackHash {
+        if finalHash != lastRolledBackHash {
             if stateManager?.isMounted == true {
                 print("✅ State manager is mounted - starting download...")
-                downloadNewRelease(newReleaseHash: newReleaseHash, newReleaseUrl: newReleaseUrl)
+                downloadNewRelease(newReleaseHash: finalHash, newReleaseUrl: finalUrl)
             } else {
                 print("⏳ State manager not mounted - storing pending release...")
-                stateManager?.pendingReleaseUrl = newReleaseUrl
-                stateManager?.pendingReleaseHash = newReleaseHash
+                stateManager?.pendingReleaseUrl = finalUrl
+                stateManager?.pendingReleaseHash = finalHash
             }
         } else {
             print("⚠️ Release hash matches last rolled back hash - skipping download")

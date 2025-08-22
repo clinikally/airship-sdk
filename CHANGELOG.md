@@ -1,3 +1,22 @@
+# [1.2.0](https://github.com/clinikally/airship-sdk/compare/v1.1.1...v1.2.0) (2025-08-22)
+
+### Breaking Changes
+
+* **ios**: Pod name changed from `react-native-stallion` to `airship-sdk`
+* **ios**: Import statement changed from `import react_native_stallion` to `import airship_sdk`
+
+### Bug Fixes
+
+* **ios**: Fix Swift compilation errors in StallionSyncHandler
+* **ios**: Clean up variable redeclaration issues
+
+### Features
+
+* **branding**: Complete rebrand from stallion to airship-sdk naming
+* **consistency**: Unified naming across package, pod, and module imports
+
+---
+
 # [1.1.1](https://github.com/clinikally/airship-sdk/compare/v1.1.0...v1.1.1) (2025-08-22)
 
 ### Bug Fixes
