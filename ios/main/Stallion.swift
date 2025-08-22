@@ -147,6 +147,33 @@ class Stallion: RCTEventEmitter {
     }
   }
   
+  @objc func setAirshipConfig(_ config: NSDictionary, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+    do {
+      // Update the StallionConstants with new configuration
+      if let apiBaseUrl = config["apiBaseUrl"] as? String {
+        StallionConstants.setRuntimeApiBaseUrl(apiBaseUrl)
+      }
+      
+      if let projectId = config["projectId"] as? String {
+        stallionStateManager.stallionConfig.projectId = projectId
+      }
+      
+      if let environment = config["environment"] as? String {
+        // Update environment if needed
+        print("📝 Environment config: \(environment)")
+      }
+      
+      if let debugMode = config["debugMode"] as? Bool {
+        print("🔧 Debug mode: \(debugMode)")
+      }
+      
+      print("🔧 Airship SDK configuration updated with: \(config)")
+      resolver("Configuration updated successfully")
+    } catch {
+      rejecter("SET_CONFIG_ERROR", error.localizedDescription, error)
+    }
+  }
+
   @objc func restart() {
       DispatchQueue.main.async {
           RCTTriggerReloadCommandListeners("Stallion: Restart")
