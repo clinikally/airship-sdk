@@ -23,7 +23,16 @@ class StallionSyncHandler {
             }
         }
 
-        guard shouldProceed else { return }
+        guard shouldProceed else { 
+            print("⚠️ Sync already in progress - skipping")
+            return 
+        }
+        
+        print("🚀 StallionSyncHandler.sync() started")
+        
+        // Send debug event to JavaScript
+        let debugPayload: NSDictionary = ["message": "Native sync started"]
+        Stallion.sendEventToRn(eventName: "SYNC_DEBUG", eventBody: debugPayload, shouldCache: false)
 
           DispatchQueue.global().async {
               do {
@@ -40,12 +49,16 @@ class StallionSyncHandler {
                   let uid = config.uid ?? ""
                   let appliedBundleHash = stateManager?.stallionMeta?.getActiveReleaseHash() ?? ""
 
+                  // Get environment from config or default to prod  
+                  let environment = "prod" // TODO: Make this configurable via StallionConfig
+                  
                   // Prepare payload for API call
                   let requestPayload: [String: Any] = [
                       "appVersion": appVersion,
                       "platform": StallionConstants.PlatformValue,
                       "projectId": projectId,
-                      "appliedBundleHash": appliedBundleHash,
+                      "currentEnvironment": environment,
+                      "appliedBundleHash": appliedBundleHash // Will be empty on first launch
                   ]
 
                   // Make API call using URLSession
@@ -68,10 +81,7 @@ class StallionSyncHandler {
           request.httpMethod = "POST"
           request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-          // Add tokens
-          request.setValue(StallionStateManager.sharedInstance()?.stallionConfig?.appToken, forHTTPHeaderField: StallionConstants.STALLION_APP_TOKEN_KEY)
-          request.setValue(StallionStateManager.sharedInstance()?.stallionConfig?.sdkToken, forHTTPHeaderField: StallionConstants.STALLION_SDK_TOKEN_KEY)
-          request.setValue(StallionStateManager.sharedInstance()?.stallionConfig?.uid, forHTTPHeaderField: StallionConstants.STALLION_UID_KEY)
+          // No authentication headers needed - API is public
 
           // Convert payload to JSON
           do {
@@ -98,16 +108,26 @@ class StallionSyncHandler {
               }
 
               // Parse the JSON response
+              print("📡 Raw API response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+              
               do {
                   if let releaseMeta = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                      print("✅ JSON parsed successfully: \(releaseMeta)")
+                      
+                      // Send debug event to JavaScript
+                      let debugPayload: NSDictionary = ["message": "JSON parsed successfully", "updateAvailable": releaseMeta["updateAvailable"] ?? false]
+                      Stallion.sendEventToRn(eventName: "SYNC_DEBUG", eventBody: debugPayload, shouldCache: false)
+                      
                       completeSync()
                       processReleaseMeta(releaseMeta, appVersion: appVersion)
                   } else {
+                      print("❌ Failed to parse JSON response")
                       completeSync()
                       let parsingError = NSError(domain: "Invalid JSON format", code: -3)
                       emitSyncError(parsingError)
                   }
               } catch {
+                  print("❌ JSON parsing error: \(error)")
                   completeSync()
                   emitSyncError(error)
               }
@@ -123,16 +143,17 @@ class StallionSyncHandler {
     }
   
     private static func processReleaseMeta(_ releaseMeta: [String: Any], appVersion: String) {
-        guard let success = releaseMeta["success"] as? Bool, success else { return }
-        guard let data = releaseMeta["data"] as? [String: Any] else { return }
-
-        if let appliedBundleData = data["appliedBundleData"] as? [String: Any] {
-            handleAppliedReleaseData(appliedBundleData, appVersion: appVersion)
+        print("🔍 Processing release meta: \(releaseMeta)")
+        
+        // Check if update is available
+        guard let updateAvailable = releaseMeta["updateAvailable"] as? Bool, updateAvailable else { 
+            print("❌ No update available or updateAvailable key missing")
+            return 
         }
-
-        if let newBundleData = data["newBundleData"] as? [String: Any] {
-            handleNewReleaseData(newBundleData)
-        }
+        
+        print("✅ Update available! Processing new release data...")
+        // Process the release data directly from our API format
+        handleNewReleaseData(releaseMeta)
     }
 
     private static func handleAppliedReleaseData(_ appliedData: [String: Any], appVersion: String) {
@@ -145,27 +166,58 @@ class StallionSyncHandler {
     }
 
     private static func handleNewReleaseData(_ newReleaseData: [String: Any]) {
-        guard let newReleaseUrl = newReleaseData["downloadUrl"] as? String,
-              let newReleaseHash = newReleaseData["checksum"] as? String,
-              !newReleaseUrl.isEmpty,
-              !newReleaseHash.isEmpty else { return }
+        print("🔍 Processing new release data: \(newReleaseData)")
+        
+        // Try our API format first
+        var newReleaseUrl = newReleaseData["downloadUrl"] as? String
+        var newReleaseHash = newReleaseData["releaseHash"] as? String
+        
+        // Fallback to legacy format
+        if newReleaseHash == nil {
+            newReleaseHash = newReleaseData["checksum"] as? String
+        }
+        
+        guard let url = newReleaseUrl, let hash = newReleaseHash,
+              !url.isEmpty, !hash.isEmpty else { 
+            print("❌ Missing downloadUrl or release hash")
+            print("downloadUrl: \(newReleaseData["downloadUrl"] ?? "nil")")
+            print("releaseHash: \(newReleaseData["releaseHash"] ?? "nil")")
+            print("checksum: \(newReleaseData["checksum"] ?? "nil")")
+            return 
+        }
+        
+        let newReleaseUrl = url
+        let newReleaseHash = hash
+        
+        print("✅ Found valid release data - URL: \(newReleaseUrl)")
+        print("✅ Release hash: \(newReleaseHash)")
 
         let stateManager = StallionStateManager.sharedInstance()
         let lastRolledBackHash = stateManager?.stallionMeta?.lastRolledBackHash ?? ""
 
         if newReleaseHash != lastRolledBackHash {
             if stateManager?.isMounted == true {
+                print("✅ State manager is mounted - starting download...")
                 downloadNewRelease(newReleaseHash: newReleaseHash, newReleaseUrl: newReleaseUrl)
             } else {
-              stateManager?.pendingReleaseUrl = newReleaseUrl
-              stateManager?.pendingReleaseHash = newReleaseHash
+                print("⏳ State manager not mounted - storing pending release...")
+                stateManager?.pendingReleaseUrl = newReleaseUrl
+                stateManager?.pendingReleaseHash = newReleaseHash
             }
+        } else {
+            print("⚠️ Release hash matches last rolled back hash - skipping download")
         }
     }
 
     static func downloadNewRelease(newReleaseHash: String, newReleaseUrl: String) {
+        print("🚀 Starting download for release hash: \(newReleaseHash)")
+        print("🚀 Download URL: \(newReleaseUrl)")
+        
         guard let stateManager = StallionStateManager.sharedInstance(),
-              let config = stateManager.stallionConfig else { return }
+              let config = stateManager.stallionConfig else { 
+            print("❌ Failed to get state manager or config")
+            return 
+        }
       
         var shouldDownload = false
         syncQueue.sync {
@@ -179,7 +231,13 @@ class StallionSyncHandler {
       let downloadPath = config.filesDirectory + "/" + StallionConstants.PROD_DIRECTORY + "/" + StallionConstants.TEMP_FOLDER_SLOT
       let projectId = config.projectId ?? ""
       
-      guard let fromUrl = URL(string: newReleaseUrl + "?projectId=" + projectId) else { return }
+      // Use the download URL directly - it's already a complete presigned S3 URL
+      guard let fromUrl = URL(string: newReleaseUrl) else { 
+          print("❌ Invalid download URL: \(newReleaseUrl)")
+          return 
+      }
+      
+      print("✅ Using download URL: \(fromUrl)")
 
       emitDownloadStarted(releaseHash: newReleaseHash)
 

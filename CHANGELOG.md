@@ -1,3 +1,21 @@
+# [1.1.1](https://github.com/clinikally/airship-sdk/compare/v1.1.0...v1.1.1) (2025-08-22)
+
+### Bug Fixes
+
+* **ios**: Fix S3 presigned URL handling by removing projectId parameter corruption
+* **ios**: Remove authentication headers for public API compatibility  
+* **ios**: Add support for direct API response format with updateAvailable field
+* **ios**: Add fallback support for legacy checksum field alongside releaseHash
+* **ios**: Enhanced debug logging for troubleshooting OTA update flow
+* **ios**: Fix Hermes bundle compatibility with React Native apps
+
+### Features
+
+* **debugging**: Comprehensive logging throughout sync and download process
+* **compatibility**: Support both new and legacy API response formats
+
+---
+
 # [2.2.0](https://github.com/stallion-tech/react-native-stallion/compare/v2.1.0...v2.2.0) (2025-06-06)
 
 
