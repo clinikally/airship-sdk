@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://airship-api.clinikally.shop';
+export const API_BASE_URL = 'http://localhost:8000';
 
 export enum API_PATHS {
   LOGIN = '/api/v1/sdk/auth/verify-pin',

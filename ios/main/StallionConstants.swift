@@ -44,7 +44,7 @@ class StallionConstants {
 
     static let CURRENT_PROD_SLOT_KEY = "stallionProdCurrentSlot"
     static let CURRENT_STAGE_SLOT_KEY = "stallionStageCurrentSlot"
-    static let STALLION_API_BASE = "https://airship-api.clinikally.shop"
+    static let STALLION_API_BASE = "http://localhost:8000"
     static let STALLION_INFO_API_PATH = "/api/v1/promoted/get-update-meta"
     static let STALLION_PROJECT_ID_IDENTIFIER = "StallionProjectId"
     static let STALLION_APP_TOKEN_IDENTIFIER = "StallionAppToken"
