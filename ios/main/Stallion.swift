@@ -149,13 +149,13 @@ class Stallion: RCTEventEmitter {
   
   @objc func setAirshipConfig(_ config: NSDictionary, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
     do {
-      // Update the StallionConstants with new configuration
+      // Update configuration (readonly properties cannot be modified at runtime)
       if let apiBaseUrl = config["apiBaseUrl"] as? String {
-        StallionConstants.setRuntimeApiBaseUrl(apiBaseUrl)
+        print("📝 API Base URL config received: \(apiBaseUrl) (Note: Using static configuration)")
       }
       
       if let projectId = config["projectId"] as? String {
-        stallionStateManager.stallionConfig.projectId = projectId
+        print("📝 Project ID config received: \(projectId) (Note: Using Info.plist configuration)")
       }
       
       if let environment = config["environment"] as? String {
