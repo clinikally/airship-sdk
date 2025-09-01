@@ -11,6 +11,7 @@
 
 @property (nonatomic, copy, readonly) NSString *uid;
 @property (nonatomic, copy, readonly) NSString *projectId;
+@property (nonatomic, copy, readonly) NSString *environment;
 @property (nonatomic, copy, readonly) NSString *appToken;
 @property (nonatomic, copy) NSString *sdkToken;
 @property (nonatomic, copy, readonly) NSString *appVersion;

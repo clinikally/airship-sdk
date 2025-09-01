@@ -5,7 +5,8 @@ public class StallionConfigConstants {
 
   public static final String PLATFORM = "android";
 
-  public static final String STALLION_PROJECT_ID_IDENTIFIER = "StallionProjectId";
+  public static final String STALLION_PROJECT_ID_IDENTIFIER = "AirshipProjectId";
+  public static final String STALLION_ENVIRONMENT_IDENTIFIER = "AirshipEnvironment";
   public static final String STALLION_APP_TOKEN_IDENTIFIER = "StallionAppToken";
   public static final String UNIQUE_ID_IDENTIFIER = "stallionDeviceId";
   public static final String API_KEY_IDENTIFIER = "x-sdk-access-token";

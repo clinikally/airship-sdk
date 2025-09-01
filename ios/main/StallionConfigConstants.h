@@ -12,6 +12,7 @@
 extern NSString *const MODULE_NAME;
 
 extern NSString *const STALLION_PROJECT_ID_IDENTIFIER;
+extern NSString *const STALLION_ENVIRONMENT_IDENTIFIER;
 extern NSString *const STALLION_APP_TOKEN_IDENTIFIER;
 extern NSString *const STALLION_APP_VERSION_IDENTIFIER;
 extern NSString *const UNIQUE_ID_IDENTIFIER;

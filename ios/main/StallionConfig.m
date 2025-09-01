@@ -14,6 +14,7 @@
     self = [super init];
     if (self) {
         _projectId = [[NSBundle mainBundle] objectForInfoDictionaryKey:STALLION_PROJECT_ID_IDENTIFIER] ?: @"";
+        _environment = [[NSBundle mainBundle] objectForInfoDictionaryKey:STALLION_ENVIRONMENT_IDENTIFIER] ?: @"";
         _appToken = [[NSBundle mainBundle] objectForInfoDictionaryKey:STALLION_APP_TOKEN_IDENTIFIER] ?: @"";
         _sdkToken = [defaults stringForKey:API_KEY_IDENTIFIER] ?: @"";
         _appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:STALLION_APP_VERSION_IDENTIFIER] ?: @"";

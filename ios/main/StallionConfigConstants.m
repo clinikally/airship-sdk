@@ -11,7 +11,8 @@
 
 NSString *const MODULE_NAME = @"Stallion";
 
-NSString *const STALLION_PROJECT_ID_IDENTIFIER = @"StallionProjectId";
+NSString *const STALLION_PROJECT_ID_IDENTIFIER = @"AirshipProjectId";
+NSString *const STALLION_ENVIRONMENT_IDENTIFIER = @"AirshipEnvironment";
 NSString *const STALLION_APP_TOKEN_IDENTIFIER = @"StallionAppToken";
 NSString *const STALLION_APP_VERSION_IDENTIFIER = @"CFBundleShortVersionString";
 NSString *const STALLION_META_IDENTIFIER = @"stallion_meta";

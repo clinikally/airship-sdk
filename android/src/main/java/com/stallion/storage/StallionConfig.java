@@ -14,6 +14,7 @@ import java.util.UUID;
 public class StallionConfig {
   private String uid;
   private final String projectId;
+  private final String environment;
   private final String appToken;
   private String sdkToken;
   private final String appVersion;
@@ -32,6 +33,14 @@ public class StallionConfig {
       parentPackageName
     );
     this.projectId = stallionProjectIdRes != 0 ?context.getString(stallionProjectIdRes) : "";
+    
+    int stallionEnvironmentRes = res.getIdentifier(
+      StallionConfigConstants.STALLION_ENVIRONMENT_IDENTIFIER,
+      "string",
+      parentPackageName
+    );
+    this.environment = stallionEnvironmentRes != 0 ? context.getString(stallionEnvironmentRes) : "";
+    
     int stallionAppTokenRes = res.getIdentifier(
       StallionConfigConstants.STALLION_APP_TOKEN_IDENTIFIER,
       "string",
@@ -93,6 +102,10 @@ public class StallionConfig {
 
   public String getProjectId() {
     return this.projectId;
+  }
+
+  public String getEnvironment() {
+    return this.environment;
   }
 
   public void updateSdkToken(String newApiKey) {

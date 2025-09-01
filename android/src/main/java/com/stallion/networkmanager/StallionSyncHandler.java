@@ -33,6 +33,7 @@ public class StallionSyncHandler {
         // Use appVersion directly from StallionConfig
         String appVersion = config.getAppVersion();
         String projectId = config.getProjectId();
+        String environment = config.getEnvironment();
         String appliedBundleHash = stateManager.stallionMeta.getActiveReleaseHash();
 
         // Prepare payload for API call
@@ -40,6 +41,7 @@ public class StallionSyncHandler {
         requestPayload.put("appVersion", appVersion);
         requestPayload.put("platform", "android");
         requestPayload.put("projectId", projectId);
+        requestPayload.put("currentEnvironment", environment);
         requestPayload.put("appliedBundleHash", appliedBundleHash);
 
         // Make API call using StallionApiManager
