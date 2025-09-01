@@ -1,5 +1,6 @@
 package com.stallion.networkmanager;
 
+import android.util.Log;
 import com.stallion.events.StallionEventManager;
 import com.stallion.storage.StallionConfigConstants;
 import com.stallion.storage.StallionMetaConstants;
@@ -13,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StallionSyncHandler {
 
+  private static final String TAG = "StallionSyncHandler";
   private static final AtomicBoolean isSyncInProgress = new AtomicBoolean(false);
   private static final AtomicBoolean isDownloadInProgress = new AtomicBoolean(false);
 
@@ -58,12 +60,66 @@ public class StallionSyncHandler {
     }).start();
   }
   private static void processReleaseMeta(JSONObject releaseMeta, String appVersion) {
-    if (releaseMeta.optBoolean("success")) {
-      JSONObject data = releaseMeta.optJSONObject("data");
-      if (data == null) return;
+    Log.d(TAG, "🔄 Processing release meta for app version: " + appVersion);
+    
+    // Handle the current API response format from your server
+    // The server returns: { updateAvailable: true, releaseHash: "...", downloadUrl: "...", ... }
+    // instead of the expected: { success: true, data: { appliedBundleData: {...}, newBundleData: {...} } }
+    
+    boolean updateAvailable = releaseMeta.optBoolean("updateAvailable", false);
+    Log.d(TAG, "📦 Update available: " + updateAvailable);
+    
+    if (updateAvailable) {
+      // Convert current response format to expected format
+      JSONObject newBundleData = new JSONObject();
+      try {
+        // Map your server's fields to what the existing code expects
+        String downloadUrl = releaseMeta.optString("downloadUrl");
+        String releaseHash = releaseMeta.optString("releaseHash");
+        String targetAppVersion = releaseMeta.optString("targetAppVersion");
+        long bundleSize = releaseMeta.optLong("bundleSize", 0);
+        
+        Log.d(TAG, "🔗 Download URL: " + downloadUrl);
+        Log.d(TAG, "🔐 Release Hash: " + releaseHash);
+        Log.d(TAG, "🎯 Target App Version: " + targetAppVersion);
+        Log.d(TAG, "📏 Bundle Size: " + bundleSize + " bytes");
+        
+        newBundleData.put("downloadUrl", downloadUrl);
+        newBundleData.put("checksum", releaseHash); // Your server uses "releaseHash", code expects "checksum"
+        newBundleData.put("targetAppVersion", targetAppVersion);
+        newBundleData.put("bundleSize", bundleSize); // Pass bundle size from API
+        
+        // Create appliedBundleData with default values (since your server doesn't provide this)
+        JSONObject appliedBundleData = new JSONObject();
+        appliedBundleData.put("isRolledBack", false); // Default to not rolled back
+        appliedBundleData.put("targetAppVersion", appVersion);
+        
+        Log.d(TAG, "✅ Successfully adapted API response format");
+        
+        // Process using existing handlers
+        handleAppliedReleaseData(appliedBundleData, appVersion);
+        handleNewReleaseData(newBundleData);
+        
+      } catch (Exception e) {
+        // If there's an error creating the adapted response, emit sync error
+        Log.e(TAG, "❌ Failed to parse API response: " + e.getMessage());
+        emitSyncError(new Exception("Failed to parse API response: " + e.getMessage()));
+      }
+    } else {
+      Log.d(TAG, "📋 No update available, trying fallback format");
+      // Fallback: try the original format for backwards compatibility
+      if (releaseMeta.optBoolean("success")) {
+        JSONObject data = releaseMeta.optJSONObject("data");
+        if (data == null) {
+          Log.d(TAG, "⚠️ No data object in response");
+          return;
+        }
 
-      handleAppliedReleaseData(data.optJSONObject("appliedBundleData"), appVersion);
-      handleNewReleaseData(data.optJSONObject("newBundleData"));
+        handleAppliedReleaseData(data.optJSONObject("appliedBundleData"), appVersion);
+        handleNewReleaseData(data.optJSONObject("newBundleData"));
+      } else {
+        Log.d(TAG, "⚠️ No success field or updateAvailable field in response");
+      }
     }
   }
 
@@ -78,13 +134,23 @@ public class StallionSyncHandler {
   }
 
   private static void handleNewReleaseData(JSONObject newReleaseData) {
-    if (newReleaseData == null) return;
+    if (newReleaseData == null) {
+      Log.d(TAG, "⚠️ No new release data provided");
+      return;
+    }
 
     String newReleaseUrl = newReleaseData.optString("downloadUrl");
     String newReleaseHash = newReleaseData.optString("checksum");
+    long bundleSize = newReleaseData.optLong("bundleSize", 0);
+
+    Log.d(TAG, "📋 Handling new release data:");
+    Log.d(TAG, "   URL: " + newReleaseUrl);
+    Log.d(TAG, "   Hash: " + newReleaseHash);
+    Log.d(TAG, "   Bundle Size: " + bundleSize + " bytes");
 
     StallionStateManager stateManager = StallionStateManager.getInstance();
     String lastRolledBackHash = stateManager.stallionMeta.getLastRolledBackHash();
+    Log.d(TAG, "   Last rolled back hash: " + lastRolledBackHash);
 
     if (
         !newReleaseHash.isEmpty()
@@ -92,14 +158,18 @@ public class StallionSyncHandler {
         && !newReleaseHash.equals(lastRolledBackHash)
     ) {
       if(stateManager.getIsMounted()) {
-        downloadNewRelease(newReleaseHash, newReleaseUrl);
+        Log.d(TAG, "🚀 App is mounted, starting download immediately");
+        downloadNewRelease(newReleaseHash, newReleaseUrl, bundleSize);
       } else {
+        Log.d(TAG, "⏳ App not mounted, setting pending release");
         stateManager.setPendingRelease(newReleaseUrl, newReleaseHash);
       }
+    } else {
+      Log.d(TAG, "⏭️ Skipping download - hash empty, URL empty, or already rolled back");
     }
   }
 
-  public static void downloadNewRelease(String newReleaseHash, String newReleaseUrl) {
+  public static void downloadNewRelease(String newReleaseHash, String newReleaseUrl, long bundleSize) {
     // Ensure only one download job runs at a time
     if (!isDownloadInProgress.compareAndSet(false, true)) {
       return; // Exit if another job is already running
@@ -111,16 +181,23 @@ public class StallionSyncHandler {
         + StallionConfigConstants.PROD_DIRECTORY
         + StallionConfigConstants.TEMP_FOLDER_SLOT;
       String projectId = config.getProjectId();
-      String downloadUrl = newReleaseUrl + "?projectId=" + projectId;
+      // Use the downloadUrl directly - it's already a complete presigned S3 URL
+      String downloadUrl = newReleaseUrl;
+      Log.d(TAG, "🔗 Using complete presigned URL directly: " + downloadUrl);
+      Log.d(TAG, "📏 Bundle size from API: " + bundleSize + " bytes");
 
       long alreadyDownloaded = StallionDownloadCacheManager.getDownloadCache(config, downloadUrl, downloadPath);
 
       emitDownloadStarted(newReleaseHash, alreadyDownloaded > 0);
 
-      StallionFileDownloader.downloadBundle(
-        downloadUrl,
-        downloadPath,
-        alreadyDownloaded,
+      // Use bundle size if available, otherwise fallback to original method
+      if (bundleSize > 0) {
+        Log.d(TAG, "📦 Using known bundle size for download");
+        StallionFileDownloader.downloadBundleWithSize(
+          downloadUrl,
+          downloadPath,
+          alreadyDownloaded,
+          bundleSize,
         new StallionDownloadCallback() {
           @Override
           public void onReject(String prefix, String error) {
@@ -148,6 +225,40 @@ public class StallionSyncHandler {
           }
         }
       );
+      } else {
+        Log.d(TAG, "📦 No bundle size available, using original download method with HEAD request");
+        StallionFileDownloader.downloadBundle(
+          downloadUrl,
+          downloadPath,
+          alreadyDownloaded,
+          new StallionDownloadCallback() {
+            @Override
+            public void onReject(String prefix, String error) {
+              isDownloadInProgress.set(false);
+              emitDownloadError(newReleaseHash, prefix + error);
+            }
+
+            @Override
+            public void onSuccess(String successPayload) {
+              isDownloadInProgress.set(false);
+              stateManager.stallionMeta.setCurrentProdSlot(StallionMetaConstants.SlotStates.NEW_SLOT);
+              stateManager.stallionMeta.setProdTempHash(newReleaseHash);
+              String currentProdNewHash = stateManager.stallionMeta.getProdNewHash();
+              if(currentProdNewHash != null && !currentProdNewHash.isEmpty()) {
+                StallionSlotManager.stabilizeProd();
+              }
+              stateManager.syncStallionMeta();
+              StallionDownloadCacheManager.deleteDownloadCache(downloadPath);
+              emitDownloadSuccess(newReleaseHash);
+            }
+
+            @Override
+            public void onProgress(double downloadFraction) {
+              // Optional: Handle progress updates
+            }
+          }
+        );
+      }
     } catch (Exception ignored) {
       isDownloadInProgress.set(false);
     }
