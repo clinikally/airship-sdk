@@ -49,8 +49,8 @@ class StallionSyncHandler {
                   let uid = config.uid ?? ""
                   let appliedBundleHash = stateManager?.stallionMeta?.getActiveReleaseHash() ?? ""
 
-                  // Get environment from config or default to prod  
-                  let environment = "prod" // TODO: Make this configurable via StallionConfig
+                  // Get environment from config via Info.plist
+                  let environment = config.environment ?? "prod"
                   
                   // Prepare payload for API call
                   let requestPayload: [String: Any] = [
