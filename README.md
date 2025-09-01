@@ -1,76 +1,64 @@
-[![stallionBanner](https://assets.stalliontech.io/stallion_logo.png)](https://stalliontech.io/)
+# Airship SDK
 
-### 👉 [Sign up with Stallion](https://console.stalliontech.io/) to start shipping OTA updates today
+Self-hosted OTA (Over-The-Air) updates SDK for React Native applications.
 
-# Stallion – React Native OTA Updates Made Simple
+[![npm Version](https://img.shields.io/npm/v/@clinikally/airship-sdk.svg)](https://www.npmjs.com/package/@clinikally/airship-sdk)  
+[![License](https://img.shields.io/npm/l/@clinikally/airship-sdk.svg)](https://www.npmjs.com/package/@clinikally/airship-sdk)
 
-[![npm Version](https://img.shields.io/npm/v/react-native-stallion.svg)](https://www.npmjs.com/package/react-native-stallion)  
-[![License](https://img.shields.io/npm/l/react-native-stallion.svg)](https://www.npmjs.com/package/react-native-stallion)
+## Features
 
-**Stallion** is a **fully managed OTA update and testing framework for React Native apps**, built to streamline how developers test and deploy JavaScript bundle updates. With Stallion, you can publish updates instantly without rebuilding your native app or going through app store approvals.
+- 🚀 **Simple Integration** - Just wrap your app component
+- 📱 **Platform-Native Configuration** - Uses Info.plist (iOS) and strings.xml (Android)
+- 🔄 **Automatic Updates** - Background download and installation
+- 🛡️ **Rollback Support** - Automatic error recovery
+- 📦 **Self-Hosted** - Complete control over your update infrastructure
 
----
+## Quick Start
 
-## 🚀 Why Use Stallion?
-
-- ✅ **Built-in Testing Framework** to validate updates before production  
-- 🔁 **Switch Between App Versions** without rebuilding native code  
-- 📦 **Publish Bundles Instantly** using Stallion CLI  
-- 📲 **Apply Updates In-App** using the Stallion SDK  
-- 🔄 **Manual + Automatic Rollbacks** with real-time rollback insights  
-- 📊 **Detailed Analytics** for update adoption and performance tracking  
-- 🏷️ **Extensive Free Plan** for indie devs and small teams  
-- ✅ **Production-Ready** and trusted by teams shipping millions of updates  
-
----
-
-## 📦 SDK Installation
-
-### Using npm
+### 1. Installation
 
 ```bash
-npm install --save react-native-stallion
+npm install @clinikally/airship-sdk
 ```
 
-### Using yarn
+### 2. Configuration
 
-```bash
-yarn add react-native-stallion
+**iOS** - Add to `ios/YourApp/Info.plist`:
+```xml
+<key>AirshipProjectId</key>
+<string>your-project-id</string>
+<key>AirshipEnvironment</key>
+<string>production</string>
 ```
 
----
+**Android** - Add to `android/app/src/main/res/values/strings.xml`:
+```xml
+<string name="AirshipProjectId">your-project-id</string>
+<string name="AirshipEnvironment">production</string>
+```
 
-## 📚 Full Installation Guide
+### 3. Wrap Your App
 
-For complete setup instructions, native integration steps, and environment configurations, visit:  
-**https://learn.stalliontech.io/docs/sdk/installation**
+```javascript
+import { withStallion } from '@clinikally/airship-sdk';
 
----
+function App() {
+  // Your app code
+}
 
-## 📖 Documentation
+export default withStallion(App);
+```
 
-For all usage instructions, advanced features, API references, and best practices:  
-**https://learn.stalliontech.io**
+## Documentation
 
----
+📖 **[Complete Integration Guide](./INTEGRATION.md)**
 
-## 🙌 Contributing
+## Requirements
 
-Please see the [CONTRIBUTING.md](./CONTRIBUTING.md) file to get started with contributing to the codebase.
+- React Native 0.60+
+- iOS 11.0+
+- Android API 21+
 
----
+## License
 
-## 🐛 Open Issues
-
-Explore [open issues](https://github.com/stallion-tech/react-native-stallion/issues) to see ongoing discussions or report bugs.
-
----
-
-## 🤝 Code of Conduct
-
-We ask all contributors to follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
-
----
-
-> **Stallion is the fastest, safest way to manage React Native OTA updates—built for modern teams.**  
-> Learn more at: **https://stalliontech.io**
+MIT License - see [LICENSE](./LICENSE) file for details.
