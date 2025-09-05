@@ -1,3 +1,4 @@
+
 import Foundation
 
 import Foundation
@@ -138,7 +139,11 @@ class Stallion: RCTEventEmitter {
         let eventJson = try JSONSerialization.data(withJSONObject: mutableDict, options: [])
           if let eventString = String(data: eventJson, encoding: .utf8) {
             DispatchQueue.main.async {
-              Stallion.sharedInstance?.sendEvent(withName: StallionConstants.STALLION_NATIVE_EVENT_NAME, body: eventString)
+              guard let instance = Stallion.sharedInstance, instance.bridge != nil else {
+                print("⚠️ Stallion: Cannot send event - bridge not initialized or instance is nil")
+                return
+              }
+              instance.sendEvent(withName: StallionConstants.STALLION_NATIVE_EVENT_NAME, body: eventString)
             }
           } else {
               throw NSError(domain: "StallionConfigError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Unable to encode JSON to string."])
