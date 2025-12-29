@@ -34,6 +34,9 @@ RCT_EXTERN_METHOD(acknowledgeEvents: (NSString *)eventIdsJson
 
 RCT_EXTERN_METHOD(restart)
 
+RCT_EXTERN_METHOD(getSyncContext: (RCTPromiseResolveBlock)promise
+                  rejecter:(RCTPromiseRejectBlock)rejecter)
+
 + (BOOL)requiresMainQueueSetup
 {
   return NO;

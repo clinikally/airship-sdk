@@ -48,3 +48,18 @@ export interface IUseStallionUpdate {
   currentlyRunningBundle: IUpdateMeta | null;
   newReleaseBundle: IUpdateMeta | null;
 }
+
+export interface ISyncContext {
+  appVersion?: string;
+  platform?: string;
+  projectId?: string;
+  currentEnvironment?: string;
+  appliedBundleHash?: string;
+}
+
+export interface IUseSyncContext {
+  syncContext: ISyncContext | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}

@@ -184,5 +184,23 @@ class Stallion: RCTEventEmitter {
           RCTTriggerReloadCommandListeners("Stallion: Restart")
       }
   }
+
+  @objc func getSyncContext(_ promise: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+      do {
+          if let context = StallionSyncHandler.getGlobalJsonContext() {
+              let contextJsonData = try JSONSerialization.data(withJSONObject: context, options: [])
+              if let contextJsonString = String(data: contextJsonData, encoding: .utf8) {
+                  promise(contextJsonString)
+              } else {
+                  throw NSError(domain: "SyncContextError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Unable to encode JSON to string."])
+              }
+          } else {
+              // Return null if no context is available yet
+              promise(NSNull())
+          }
+      } catch {
+          rejecter("getSyncContext error", error.localizedDescription, error)
+      }
+  }
 }
 

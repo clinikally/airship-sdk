@@ -62,3 +62,23 @@ export const acknowledgeEventsNative: (eventIds: string) => Promise<string> =
   StallionNativeModule?.acknowledgeEvents;
 
 export const restart: () => null = StallionNativeModule?.restart;
+
+export const getSyncContext = (): Promise<Record<string, any> | null> => {
+  return new Promise((resolve, reject) => {
+    StallionNativeModule?.getSyncContext()
+      .then((contextString: string | null) => {
+        try {
+          if (contextString === null) {
+            resolve(null);
+          } else {
+            resolve(JSON.parse(contextString));
+          }
+        } catch (_) {
+          reject('invalid sync context string');
+        }
+      })
+      .catch(() => {
+        reject('failed to fetch sync context');
+      });
+  });
+};

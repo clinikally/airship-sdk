@@ -25,7 +25,12 @@ if (StallionNativeModule?.getStallionConfig) {
   useStallionModal = useStallionModalNoop;
 }
 
-export { sync, restart } from './main/utils/StallionNativeUtils';
+export {
+  sync,
+  restart,
+  getSyncContext,
+} from './main/utils/StallionNativeUtils';
 export { useStallionUpdate } from './main/utils/useStallionUpdate';
+export { useSyncContext } from './main/utils/useSyncContext';
 export const addEventListener =
   stallionEventEmitter.addEventListener.bind(stallionEventEmitter);

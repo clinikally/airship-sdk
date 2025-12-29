@@ -13,6 +13,24 @@ class StallionSyncHandler {
     private static var isDownloadInProgress = false
     private static let syncQueue = DispatchQueue(label: "com.stallion.syncQueue")
 
+    // Global JSON context to store the last API payload
+    private static var globalJsonContext: [String: Any]?
+    private static let contextQueue = DispatchQueue(label: "com.stallion.contextQueue", attributes: .concurrent)
+
+    // Global function to get the JSON context
+    static func getGlobalJsonContext() -> [String: Any]? {
+        return contextQueue.sync {
+            return globalJsonContext
+        }
+    }
+
+    // Private function to update the global JSON context
+    private static func updateGlobalJsonContext(_ payload: [String: Any]) {
+        contextQueue.async(flags: .barrier) {
+            globalJsonContext = payload
+        }
+    }
+
     static func sync() {
         var shouldProceed = false
 
@@ -87,6 +105,9 @@ class StallionSyncHandler {
           do {
               let jsonData = try JSONSerialization.data(withJSONObject: payload, options: [])
               request.httpBody = jsonData
+
+              // Update the global JSON context with the payload
+              updateGlobalJsonContext(payload)
           } catch {
               completeSync()
               emitSyncError(error)
