@@ -1,6 +1,6 @@
 {
   "name": "@clinikally/airship-sdk",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Self-hosted OTA updates SDK for React Native",
   "main": "index",
   "types": "types/index.d.ts",
