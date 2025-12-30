@@ -49,12 +49,28 @@ export interface IUseStallionUpdate {
   newReleaseBundle: IUpdateMeta | null;
 }
 
+export interface ISyncContextResponse {
+  updateAvailable?: boolean;
+  downloadUrl?: string;
+  releaseHash?: string;
+  version?: string;
+  versionNumber?: number;
+  environment?: string;
+  releaseNotes?: string;
+  bundleSize?: number;
+  [key: string]: any; // Allow additional fields from API response
+}
+
 export interface ISyncContext {
+  // Request payload
   appVersion?: string;
   platform?: string;
   projectId?: string;
   currentEnvironment?: string;
   appliedBundleHash?: string;
+
+  // OTA API response
+  response?: ISyncContextResponse;
 }
 
 export interface IUseSyncContext {

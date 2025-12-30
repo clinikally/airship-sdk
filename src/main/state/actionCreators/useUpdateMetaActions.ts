@@ -69,14 +69,19 @@ const useUpdateMetaActions = (
 
   useEffect(() => {
     if (currentlyRunningHash && !updateMetaState.currentlyRunningBundle) {
-      getUpdateMetaData(currentlyRunningHash).then((res) => {
-        if (res.data) {
-          updateMetaDispatch({
-            type: UpdateMetaActionKind.SET_CURRENTLY_RUNNING_META,
-            payload: res.data,
-          });
-        }
-      });
+      getUpdateMetaData(currentlyRunningHash)
+        .then((res) => {
+          if (res.data) {
+            updateMetaDispatch({
+              type: UpdateMetaActionKind.SET_CURRENTLY_RUNNING_META,
+              payload: res.data,
+            });
+          }
+        })
+        .catch((error) => {
+          // Silently handle errors - metadata fetch is optional
+          console.log('Failed to fetch bundle metadata:', error);
+        });
     }
   }, [
     currentlyRunningHash,
@@ -87,14 +92,19 @@ const useUpdateMetaActions = (
 
   useEffect(() => {
     if (newReleaseHash && !updateMetaState.newBundle) {
-      getUpdateMetaData(newReleaseHash).then((res) => {
-        if (res.data) {
-          updateMetaDispatch({
-            type: UpdateMetaActionKind.SET_NEW_BUNDLE_META,
-            payload: res.data,
-          });
-        }
-      });
+      getUpdateMetaData(newReleaseHash)
+        .then((res) => {
+          if (res.data) {
+            updateMetaDispatch({
+              type: UpdateMetaActionKind.SET_NEW_BUNDLE_META,
+              payload: res.data,
+            });
+          }
+        })
+        .catch((error) => {
+          // Silently handle errors - metadata fetch is optional
+          console.log('Failed to fetch new bundle metadata:', error);
+        });
     }
   }, [newReleaseHash, updateMetaState, updateMetaDispatch, getUpdateMetaData]);
 };

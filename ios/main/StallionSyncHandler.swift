@@ -134,11 +134,16 @@ class StallionSyncHandler {
               do {
                   if let releaseMeta = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                       print("✅ JSON parsed successfully: \(releaseMeta)")
-                      
+
+                      // Update global context with the complete OTA response
+                      var contextWithResponse = globalJsonContext ?? [:]
+                      contextWithResponse["response"] = releaseMeta
+                      updateGlobalJsonContext(contextWithResponse)
+
                       // Send debug event to JavaScript
                       let debugPayload: NSDictionary = ["message": "JSON parsed successfully", "updateAvailable": releaseMeta["updateAvailable"] ?? false]
                       Stallion.sendEventToRn(eventName: "SYNC_DEBUG", eventBody: debugPayload, shouldCache: false)
-                      
+
                       completeSync()
                       processReleaseMeta(releaseMeta, appVersion: appVersion)
                   } else {
