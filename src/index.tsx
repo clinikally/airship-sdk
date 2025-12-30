@@ -32,5 +32,10 @@ export {
 } from './main/utils/StallionNativeUtils';
 export { useStallionUpdate } from './main/utils/useStallionUpdate';
 export { useSyncContext } from './main/utils/useSyncContext';
+export { useBundleInfo } from './main/utils/useBundleInfo';
+export type {
+  IBundleInfo,
+  IPersistedBundleInfo,
+} from './main/utils/useBundleInfo';
 export const addEventListener =
   stallionEventEmitter.addEventListener.bind(stallionEventEmitter);

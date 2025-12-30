@@ -58,6 +58,10 @@ export interface ISyncContextResponse {
   environment?: string;
   releaseNotes?: string;
   bundleSize?: number;
+  promotionId?: number;
+  targetAppVersion?: string;
+  isMandatory?: boolean;
+  rolloutPercentage?: number;
   [key: string]: any; // Allow additional fields from API response
 }
 
