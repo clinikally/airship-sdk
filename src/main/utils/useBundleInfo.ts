@@ -144,38 +144,42 @@ export const useBundleInfo = (): IBundleInfo => {
   const saveCurrentlyRunningBundle = useCallback(
     async (context: ISyncContext) => {
       // Save currently running OTA bundle info when appliedBundleHash exists
-      if (context.appliedBundleHash && context.response) {
+      if (context.appliedBundleHash) {
         const currentHash = context.appliedBundleHash;
         const persistedHash = persistedData?.currentlyRunningBundle?.bundleHash;
 
         // Only update if bundle hash changed or not yet saved
         if (currentHash !== persistedHash) {
-          try {
-            const currentBundle = {
-              bundleHash: currentHash,
-              version: context.response.version || '',
-              releaseNotes: context.response.releaseNotes || '',
-              environment:
-                context.response.environment ||
-                context.currentEnvironment ||
-                '',
-              appliedAt: Date.now(),
-            };
+          // Use current response or fall back to lastKnownUpdate for version info
+          const versionSource =
+            context.response || persistedData?.lastKnownUpdate;
 
-            const newData: IPersistedBundleInfo = {
-              nativeBundleInfo: persistedData?.nativeBundleInfo || null,
-              currentlyRunningBundle: currentBundle,
-              lastKnownUpdate: persistedData?.lastKnownUpdate ?? null,
-              lastSyncAt: Date.now(),
-            };
+          if (versionSource) {
+            try {
+              const currentBundle = {
+                bundleHash: currentHash,
+                version: versionSource.version || '',
+                releaseNotes: versionSource.releaseNotes || '',
+                environment:
+                  versionSource.environment || context.currentEnvironment || '',
+                appliedAt: Date.now(),
+              };
 
-            await AsyncStorage.setItem(
-              BUNDLE_INFO_STORAGE_KEY,
-              JSON.stringify(newData)
-            );
-            setPersistedData(newData);
-          } catch (err) {
-            console.warn('Failed to save currently running bundle:', err);
+              const newData: IPersistedBundleInfo = {
+                nativeBundleInfo: persistedData?.nativeBundleInfo || null,
+                currentlyRunningBundle: currentBundle,
+                lastKnownUpdate: persistedData?.lastKnownUpdate ?? null,
+                lastSyncAt: Date.now(),
+              };
+
+              await AsyncStorage.setItem(
+                BUNDLE_INFO_STORAGE_KEY,
+                JSON.stringify(newData)
+              );
+              setPersistedData(newData);
+            } catch (err) {
+              console.warn('Failed to save currently running bundle:', err);
+            }
           }
         }
       }
