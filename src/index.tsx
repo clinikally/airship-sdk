@@ -37,5 +37,7 @@ export type {
   IBundleInfo,
   IPersistedBundleInfo,
 } from './main/utils/useBundleInfo';
+export { getBundleMetadata } from './main/utils/getBundleMetadata';
+export type { IBundleMetadata } from './main/utils/getBundleMetadata';
 export const addEventListener =
   stallionEventEmitter.addEventListener.bind(stallionEventEmitter);

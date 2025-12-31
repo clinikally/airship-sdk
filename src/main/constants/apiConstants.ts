@@ -9,5 +9,6 @@ export enum API_PATHS {
   USER_PROFILE = '/api/v1/sdk/user-profile',
   LOG_EVENTS = '/api/v1/analytics/log-bulk-events',
   GET_META_FROM_HASH = '/api/v1/sdk/get-meta-from-hash',
+  GET_BUNDLE_METADATA = '/api/v1/sdk/bundle/get-metadata',
 }
 export const BUNDLE_API_PAGE_SIZE = 10;
