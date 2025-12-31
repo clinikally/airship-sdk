@@ -15,6 +15,15 @@ export interface IPersistedBundleInfo {
     savedAt: number; // timestamp
   } | null;
 
+  // Currently running OTA bundle info (updated when bundle changes)
+  currentlyRunningBundle?: {
+    bundleHash: string;
+    version: string;
+    releaseNotes: string;
+    environment: string;
+    appliedAt: number; // timestamp
+  } | null;
+
   // Last known OTA update response (persisted)
   lastKnownUpdate?: ISyncContext['response'] | null;
 
@@ -25,6 +34,8 @@ export interface IPersistedBundleInfo {
 export interface IBundleInfo {
   // Current bundle info
   currentBundleHash: string | null;
+  currentBundleVersion: string | null; // NEW: version of currently running bundle
+  currentBundleReleaseNotes: string | null; // NEW: release notes of current bundle
   appVersion: string | null;
   platform: string | null;
   environment: string | null;
@@ -130,6 +141,48 @@ export const useBundleInfo = (): IBundleInfo => {
     [persistedData]
   );
 
+  const saveCurrentlyRunningBundle = useCallback(
+    async (context: ISyncContext) => {
+      // Save currently running OTA bundle info when appliedBundleHash exists
+      if (context.appliedBundleHash && context.response) {
+        const currentHash = context.appliedBundleHash;
+        const persistedHash = persistedData?.currentlyRunningBundle?.bundleHash;
+
+        // Only update if bundle hash changed or not yet saved
+        if (currentHash !== persistedHash) {
+          try {
+            const currentBundle = {
+              bundleHash: currentHash,
+              version: context.response.version || '',
+              releaseNotes: context.response.releaseNotes || '',
+              environment:
+                context.response.environment ||
+                context.currentEnvironment ||
+                '',
+              appliedAt: Date.now(),
+            };
+
+            const newData: IPersistedBundleInfo = {
+              nativeBundleInfo: persistedData?.nativeBundleInfo || null,
+              currentlyRunningBundle: currentBundle,
+              lastKnownUpdate: persistedData?.lastKnownUpdate ?? null,
+              lastSyncAt: Date.now(),
+            };
+
+            await AsyncStorage.setItem(
+              BUNDLE_INFO_STORAGE_KEY,
+              JSON.stringify(newData)
+            );
+            setPersistedData(newData);
+          } catch (err) {
+            console.warn('Failed to save currently running bundle:', err);
+          }
+        }
+      }
+    },
+    [persistedData]
+  );
+
   const clearPersistedData = useCallback(async () => {
     try {
       await AsyncStorage.removeItem(BUNDLE_INFO_STORAGE_KEY);
@@ -158,6 +211,13 @@ export const useBundleInfo = (): IBundleInfo => {
     }
   }, [syncContext?.response, isInitialized, persistUpdateData]);
 
+  // Save currently running bundle info whenever appliedBundleHash changes
+  useEffect(() => {
+    if (syncContext && isInitialized) {
+      saveCurrentlyRunningBundle(syncContext);
+    }
+  }, [syncContext, isInitialized, saveCurrentlyRunningBundle]);
+
   // Use current response if updateAvailable, otherwise use persisted
   const effectiveUpdate = syncContext?.response?.updateAvailable
     ? syncContext.response
@@ -166,6 +226,10 @@ export const useBundleInfo = (): IBundleInfo => {
   return {
     // Current bundle info
     currentBundleHash: syncContext?.appliedBundleHash || null,
+    currentBundleVersion:
+      persistedData?.currentlyRunningBundle?.version || null,
+    currentBundleReleaseNotes:
+      persistedData?.currentlyRunningBundle?.releaseNotes || null,
     appVersion: syncContext?.appVersion || null,
     platform: syncContext?.platform || null,
     environment: syncContext?.currentEnvironment || null,
