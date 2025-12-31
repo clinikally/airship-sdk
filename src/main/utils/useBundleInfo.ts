@@ -147,39 +147,41 @@ export const useBundleInfo = (): IBundleInfo => {
       if (context.appliedBundleHash) {
         const currentHash = context.appliedBundleHash;
         const persistedHash = persistedData?.currentlyRunningBundle?.bundleHash;
+        const persistedVersion = persistedData?.currentlyRunningBundle?.version;
 
-        // Only update if bundle hash changed or not yet saved
-        if (currentHash !== persistedHash) {
-          // Use current response or fall back to lastKnownUpdate for version info
-          const versionSource =
-            context.response || persistedData?.lastKnownUpdate;
+        // Use current response or fall back to lastKnownUpdate for version info
+        const versionSource =
+          context.response || persistedData?.lastKnownUpdate;
 
-          if (versionSource) {
-            try {
-              const currentBundle = {
-                bundleHash: currentHash,
-                version: versionSource.version || '',
-                releaseNotes: versionSource.releaseNotes || '',
-                environment:
-                  versionSource.environment || context.currentEnvironment || '',
-                appliedAt: Date.now(),
-              };
+        // Save if: hash changed OR version info is available and not yet saved
+        const shouldSave =
+          currentHash !== persistedHash || (versionSource && !persistedVersion);
 
-              const newData: IPersistedBundleInfo = {
-                nativeBundleInfo: persistedData?.nativeBundleInfo || null,
-                currentlyRunningBundle: currentBundle,
-                lastKnownUpdate: persistedData?.lastKnownUpdate ?? null,
-                lastSyncAt: Date.now(),
-              };
+        if (shouldSave && versionSource) {
+          try {
+            const currentBundle = {
+              bundleHash: currentHash,
+              version: versionSource.version || '',
+              releaseNotes: versionSource.releaseNotes || '',
+              environment:
+                versionSource.environment || context.currentEnvironment || '',
+              appliedAt: Date.now(),
+            };
 
-              await AsyncStorage.setItem(
-                BUNDLE_INFO_STORAGE_KEY,
-                JSON.stringify(newData)
-              );
-              setPersistedData(newData);
-            } catch (err) {
-              console.warn('Failed to save currently running bundle:', err);
-            }
+            const newData: IPersistedBundleInfo = {
+              nativeBundleInfo: persistedData?.nativeBundleInfo || null,
+              currentlyRunningBundle: currentBundle,
+              lastKnownUpdate: persistedData?.lastKnownUpdate ?? null,
+              lastSyncAt: Date.now(),
+            };
+
+            await AsyncStorage.setItem(
+              BUNDLE_INFO_STORAGE_KEY,
+              JSON.stringify(newData)
+            );
+            setPersistedData(newData);
+          } catch (err) {
+            console.warn('Failed to save currently running bundle:', err);
           }
         }
       }
@@ -208,9 +210,9 @@ export const useBundleInfo = (): IBundleInfo => {
     }
   }, [syncContext, persistedData, saveNativeBundleInfo]);
 
-  // Persist update data when available
+  // Persist update data when response exists (regardless of updateAvailable)
   useEffect(() => {
-    if (syncContext?.response?.updateAvailable && isInitialized) {
+    if (syncContext?.response && isInitialized) {
       persistUpdateData(syncContext.response);
     }
   }, [syncContext?.response, isInitialized, persistUpdateData]);
