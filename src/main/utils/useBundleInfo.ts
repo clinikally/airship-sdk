@@ -171,7 +171,9 @@ export const useBundleInfo = (): IBundleInfo => {
             const newData: IPersistedBundleInfo = {
               nativeBundleInfo: persistedData?.nativeBundleInfo || null,
               currentlyRunningBundle: currentBundle,
-              lastKnownUpdate: persistedData?.lastKnownUpdate ?? null,
+              // Update lastKnownUpdate if we have a fresh response
+              lastKnownUpdate:
+                context.response || (persistedData?.lastKnownUpdate ?? null),
               lastSyncAt: Date.now(),
             };
 
